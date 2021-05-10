@@ -4,8 +4,7 @@ mod bert_tokenization;
 use std::time::{Duration, SystemTime};
 
 fn main(){
-    // println!("{:}", bert_tokenization::bert_tokenize("i am happy to fudan university").unwrap());
-    let x = "i am happy to fudan university";
+    let x = "i am happy to go to fudan university";
     println!("{:}", bert_tokenization::bert_tokenize(x).unwrap());
     
     let now = SystemTime::now();
