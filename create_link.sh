@@ -1,0 +1,1 @@
+ln -s target/debug/libpyo3_cheatsheet.so pyo3_cheatsheet.so
