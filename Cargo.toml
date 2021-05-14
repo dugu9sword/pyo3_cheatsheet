@@ -19,3 +19,4 @@ features = ["extension-module"]
 
 [dependencies]
 itertools = "0.8.0"
+lazy_static = "1.4.0"
