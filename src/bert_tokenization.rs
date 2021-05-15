@@ -22,49 +22,66 @@ lazy_static! {
 
 
 pub fn bert_tokenize(sent: &str) -> Result<String, Error> {
-    // let space_split_words: Vec<&str> = sent.split(" ").collect();  
-    let mut words: Vec<&str> = Vec::new();
-    let mut c_sid = 0;
-    for c_eid in 0..sent.len(){
-        let c = sent.chars().nth(c_eid).unwrap();
-        if c == ' ' || PUNCT.contains(&c) || c_eid == sent.len() {
-            if c_sid != c_eid{
-                words.push(&sent[c_sid..c_eid]);
-            }
-            c_sid = c_eid + 1;
+    let mut char_vec: Vec<char> = sent.chars().collect();
+    let mut i = 0;
+    let mut last_is_space = false;
+    loop{
+        let c = char_vec[i];
+        // strip spaces
+        if c == ' ' && last_is_space {
+            char_vec.remove(i);
+            continue;
         }
         if PUNCT.contains(&c) {
-            words.push(&sent[c_eid..c_eid + 1]);
+            if !last_is_space{
+                char_vec.insert(i, ' ');
+                i += 1;
+            }
+            char_vec.insert(i + 1, ' ');
+            i += 2;
+            last_is_space = true;
+        } else {
+            i += 1;
+            last_is_space = c == ' ';
+        }
+        
+        if i == char_vec.len(){
+            break
         }
     }
-    // print!("{:?}", words);
+    let sent: String = char_vec.iter().collect();
+    // println!("{:?}", sent);
+    let words: Vec<&str> = sent.trim().split(' ').collect();
+    // println!("{:?}", words);
 
     let mut subwords: Vec<String> = Vec::new();
+    let mut tmp_str = String::with_capacity(32);
+
     for word in words{
         let mut start_id = 0;
-        let mut end_id = word.len();
         // println!("tokenize: {}", word);
-        'start_loop: loop{
-            'end_loop: loop{
-                if end_id <= start_id {
-                    subwords.push("[UNK]".to_string());
-                    break 'start_loop;
-                }
-                let mut sub = word[start_id..end_id].to_string();
-                if start_id != 0 {
-                    sub.insert_str(0, "##");
-                }
-                if VOCAB.contains(&sub){
-                    subwords.push(sub);
-                    break 'end_loop;
-                }
-                end_id = end_id - 1;
+        loop{
+            let mut end_id = word.len();
+            tmp_str.clear();
+            if start_id != 0 {
+                tmp_str.push_str("##");
             }
-            if end_id == word.len(){
-                break 'start_loop;
-            }else{
-                start_id = end_id;
-                end_id = word.len();
+            tmp_str.push_str(&word[start_id..end_id]);
+            loop {
+                if VOCAB.contains(&tmp_str){
+                    subwords.push(tmp_str.clone());
+                    break;
+                }
+                end_id -= 1;
+                // if end_id == start_id {
+                //     subwords.push(String::from("[UNK]"));
+                //     break;
+                // }
+                tmp_str.pop();
+            }
+            start_id = end_id;
+            if start_id == word.len(){
+                break;
             }
         }
     }
